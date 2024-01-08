@@ -2,13 +2,17 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Random;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 public class MainFrame extends JFrame {
     JTextField item;
     JTextField qty;
-    JLabel intro, totalLabel;
+    JLabel intro, totalLabel, itemlistfield;
 
     Supplier<Stream<String>> availstream = () -> Stream.of("BfastWRice", "NormWRice", "Bfast/NormWORice", 
                                                             "BWater/Soda", "RegJuice", "NormDessert");
@@ -35,24 +39,30 @@ public class MainFrame extends JFrame {
 
         totalLabel = new JLabel();
         totalLabel.setFont(mainfont);
-        totalLabel.setText("SUBTOTAL: ₱");
+        totalLabel.setText("SUBTOTAL: P");
 
+        itemlistfield = new JLabel();
+        itemlistfield.setFont(mainfont);
+        itemlistfield.setSize(20,50);
+        itemlistfield.setText("");
 
         //Item List Panel
         JPanel itemlistpanel = new JPanel();
         itemlistpanel.setLayout(new GridLayout(5, 1));
         itemlistpanel.setBackground(Color.WHITE);
         itemlistpanel.setSize(20,50);
+        itemlistpanel.add(itemlistfield);
+        
 
         //Form Panel
         JPanel formP = new JPanel();
-        formP.setLayout(new GridLayout(4,1,5,5));
+        formP.setLayout(new GridLayout(4,2,5,5));
         formP.setOpaque(false);
         formP.add(itemlabel);
         formP.add(item);
         formP.add(qtylabel);
         formP.add(qty);
-        formP.add(itemlistpanel, BorderLayout.AFTER_LAST_LINE);
+        formP.add(itemlistpanel);
 
         //Menu Items
         JButton b1 = new JButton();
@@ -171,6 +181,10 @@ public class MainFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 intro.setText("");
+                qty.setText("");
+                item.setText("");
+                itemlistfield.setText("");
+                
             }
         });
 
@@ -241,7 +255,7 @@ public class MainFrame extends JFrame {
 
         //Set Style
         setTitle("Store Billing App");
-        setSize(700, 700);
+        setSize(200, 200);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
         setMinimumSize(new Dimension(900,900));
@@ -284,7 +298,6 @@ public class MainFrame extends JFrame {
                     noitem();
                     break;
             }
-            
         } else {
             noitem();
         }
@@ -293,6 +306,8 @@ public class MainFrame extends JFrame {
     //Main Method for Adding Item in Subtotal
     public void additem(int x, int y) {
         String initlabel = intro.getText();
+        String items = item.getText();
+        String quan = qty.getText();
         int z = x;
         int q = y;
 
@@ -317,9 +332,21 @@ public class MainFrame extends JFrame {
             intro.setText(finalabel);
             item.setText("");
             qty.setText("");
+            
         } 
+        listitem(items, quan);
     }
+    public void listitem(String a, String b) {
+        String inititem = a;
+        String quantiitem = b;
 
+        if (itemlistfield.getText().equals("")) {
+            itemlistfield.setText("Items: "+ a + "("+ b +")");
+        } else {
+            itemlistfield.setText(itemlistfield.getText() + ", " + inititem + "(" + quantiitem + ")");
+        }
+
+    }
     //Pop Up when No Item Found
     public void noitem() {
         // create a dialog Box
@@ -352,13 +379,50 @@ public class MainFrame extends JFrame {
     public void clearall() {
         //Generates Unique Order ID
         Random rand = new Random();
-
+        int orderid = rand.nextInt(12345);
         JFrame f;  
         f = new JFrame();
-        JOptionPane.showConfirmDialog(f, "Transaction Complete!", "Order ID:" + rand.nextInt(12345), JOptionPane.DEFAULT_OPTION);
-        
+        JOptionPane.showConfirmDialog(f, "Transaction Complete!", "Order ID:" + orderid, JOptionPane.DEFAULT_OPTION);
+        wreceipt(orderid, itemlistfield.getText(), intro.getText());
+
         intro.setText("");
     }
+
+    //Write to File (Receipt)
+    public void wreceipt(int x, String a, String b) {
+        
+        //Local Variables 
+        int orderidrec = x;
+        String totalprice = b;
+        String itemlist = a;
+
+        //Date and Time Format
+        LocalDateTime dateTime = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss");
+        try {
+
+            //
+            FileWriter receipt = new FileWriter("orders.txt", true);
+            receipt.write(System.getProperty("line.separator"));
+            receipt.write(System.getProperty("line.separator"));
+
+            receipt.write("Order ID:"+Integer.toString(orderidrec) +", DATE AND TIME: "+ dateTime.format(formatter));
+
+            receipt.write(System.getProperty("line.separator"));
+            
+            receipt.write(itemlist);
+            receipt.write(System.getProperty("line.separator"));
+            receipt.write("TOTAL: P"+totalprice);
+
+            //Close Writer
+            receipt.close();
+        } 
+        catch(Exception e) {
+            JOptionPane.showMessageDialog(null,"Failed to print receipt, please retry");
+        }    
+
+    }
+
     public static void main(String[] args) {
         //Initialize and Open Main JFrame
         MainFrame frame = new MainFrame();
