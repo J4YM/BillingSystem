@@ -2,7 +2,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -195,39 +194,7 @@ public class MainFrame extends JFrame {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                JFrame f;  
-                f = new JFrame();
-                String amount = JOptionPane.showInputDialog(f, "Enter Amount");
-
-                //Initialize values
-                int totamount = Integer.parseInt(intro.getText());
-                int payamount = Integer.parseInt(amount);
-                int finalamount = payamount - totamount;
-
-                //Verify if Value Exists
-                if (amount.equals("")) {
-                    
-                } else if (totamount > payamount) {
-                    JOptionPane.showMessageDialog(f, "Not Enough Payable Cash");//Verify if Entered amount is Enough
-                } else if (!(amount.equals(""))) {
-
-                    //Verify Admin Password for Transaction
-                    JPasswordField pwd = new JPasswordField(10);
-                    int action = JOptionPane.showConfirmDialog(null, pwd,"Enter Admin Password",JOptionPane.OK_CANCEL_OPTION);
-                    if(action < 0) {
-                        return;
-                    } else {
-                        String passString = new String(pwd.getPassword());
-
-                        if (passString.equals("admin123")) {
-                            JOptionPane.showMessageDialog(f, "Change: " + finalamount);
-                            clearall();
-                        } else {
-                            JOptionPane.showConfirmDialog(f, "Initiate New Transaction", "Incorrect Password", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
-                        }
-                    }
-                    
-                }
+                pass();
             }
             
         });
@@ -333,7 +300,8 @@ public class MainFrame extends JFrame {
             item.setText("");
             qty.setText("");
             
-        } 
+        }
+        //Add to Item List Panel 
         listitem(items, quan);
     }
     public void listitem(String a, String b) {
@@ -345,8 +313,8 @@ public class MainFrame extends JFrame {
         } else {
             itemlistfield.setText(itemlistfield.getText() + ", " + inititem + "(" + quantiitem + ")");
         }
-
     }
+
     //Pop Up when No Item Found
     public void noitem() {
         // create a dialog Box
@@ -390,7 +358,6 @@ public class MainFrame extends JFrame {
 
     //Write to File (Receipt)
     public void wreceipt(int x, String a, String b) {
-        
         //Local Variables 
         int orderidrec = x;
         String totalprice = b;
@@ -398,18 +365,19 @@ public class MainFrame extends JFrame {
 
         //Date and Time Format
         LocalDateTime dateTime = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("E, MMM dd yyyy KK:mm a");
         try {
 
-            //
+            //Writer to Text File
             FileWriter receipt = new FileWriter("orders.txt", true);
             receipt.write(System.getProperty("line.separator"));
             receipt.write(System.getProperty("line.separator"));
 
+            //Order ID and DateTime
             receipt.write("Order ID:"+Integer.toString(orderidrec) +", DATE AND TIME: "+ dateTime.format(formatter));
-
             receipt.write(System.getProperty("line.separator"));
-            
+
+            //List Items
             receipt.write(itemlist);
             receipt.write(System.getProperty("line.separator"));
             receipt.write("TOTAL: P"+totalprice);
@@ -422,6 +390,44 @@ public class MainFrame extends JFrame {
         }    
 
     }
+
+    public void pass() {
+        JFrame f;  
+                f = new JFrame();
+                String amount = JOptionPane.showInputDialog(f, "Enter Amount");
+
+                //Initialize values
+                int totamount = Integer.parseInt(intro.getText());
+                int payamount = Integer.parseInt(amount);
+                int finalamount = payamount - totamount;
+
+                //Verify if Value Exists
+                if (amount.equals("")) {
+                    
+                } else if (totamount > payamount) {
+                    JOptionPane.showMessageDialog(f, "Not Enough Payable Cash");//Verify if Entered amount is Enough
+                } else if (!(amount.equals(""))) {
+
+                    //Verify Admin Password for Transaction
+                    JPasswordField pwd = new JPasswordField(10);
+                    int action = JOptionPane.showConfirmDialog(null, pwd,"Enter Admin Password",JOptionPane.OK_CANCEL_OPTION);
+                    if(action < 0) {
+                        return;
+                    } else {
+                        String passString = new String(pwd.getPassword());
+
+                        if (passString.equals("admin123")) {
+                            JOptionPane.showMessageDialog(f, "Change: " + finalamount);
+                            clearall();
+                        } else {
+                            JOptionPane.showConfirmDialog(f, "Initiate New Transaction", "Incorrect Password", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
+                            pass();
+                        }
+                    }
+                    
+                }
+    }
+
 
     public static void main(String[] args) {
         //Initialize and Open Main JFrame
